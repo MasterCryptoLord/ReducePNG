@@ -1,9 +1,9 @@
-from flask import Flask, request, send_file
+from flask import Flask, request, send_file, render_template
 from werkzeug.utils import secure_filename
 import os
+import zipfile
 import tinify
 
-# replace 'YOUR_API_KEY' with your actual TinyPNG API key
 tinify.key = "gjbdV6w0lkgJblQ0fdDFMp3C3180chsj"
 
 app = Flask(__name__)
@@ -12,34 +12,40 @@ app = Flask(__name__)
 @app.route('/', methods=['GET', 'POST'])
 def upload_file():
     if request.method == 'POST':
-        file = request.files['file']
-        filename = secure_filename(file.filename)
-        file.save(filename)
+        files = request.files.getlist('file')
+        new_files = []
 
-        # compress the file using TinyPNG
-        source = tinify.from_file(filename)
-        source.to_file("optimized.png")
+        for file in files:
+            filename = secure_filename(file.filename)
+            file.save(filename)
 
-        # remove the original file
-        os.remove(filename)
+            # Compress the file using TinyPNG
+            source = tinify.from_file(filename)
+            new_filename = os.path.splitext(
+                filename)[0] + "(ReducePng.com)" + os.path.splitext(filename)[1]
+            source.to_file(new_filename)
 
-        return {'message': 'File uploaded and compressed successfully'}
+            # Add the compressed file to new_files list
+            new_files.append(new_filename)
 
-    return '''
-    <!doctype html>
-    <title>Upload File</title>
-    <h1>Upload File</h1>
-    <form method=post enctype=multipart/form-data>
-      <input type=file name=file>
-      <input type=submit value=Upload>
-    </form>
-    '''
+            # Remove the original file
+            os.remove(filename)
+
+        # Create a zip file and add each compressed file to it
+        zip_filename = "compressed_files.zip"
+        with zipfile.ZipFile(zip_filename, 'w') as zipf:
+            for file in new_files:
+                zipf.write(file)
+
+        return render_template('download.html', filename=zip_filename)
+
+    return render_template('upload.html')
 
 
-@app.route('/download', methods=['GET'])
-def download_file():
+@app.route('/download/<filename>', methods=['GET'])
+def download_file(filename):
     try:
-        return send_file('optimized.png', as_attachment=True)
+        return send_file(filename, as_attachment=True)
     except Exception as e:
         return str(e)
 
