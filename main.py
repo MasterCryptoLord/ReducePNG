@@ -7,6 +7,7 @@ import tinify
 tinify.key = "gjbdV6w0lkgJblQ0fdDFMp3C3180chsj"
 
 app = Flask(__name__)
+app.secret_key = 'some_secret_key'
 
 
 @app.route('/', methods=['GET', 'POST'])
