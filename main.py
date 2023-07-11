@@ -13,6 +13,12 @@ app = Flask(__name__)
 def upload_file():
     if request.method == 'POST':
         files = request.files.getlist('file')
+
+        # Check if any file is uploaded or not
+        if not files or files[0].filename == '':
+            flash('No file selected for uploading')
+            return redirect(request.url)
+
         new_files = []
 
         for file in files:

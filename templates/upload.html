@@ -63,6 +63,11 @@
         enctype="multipart/form-data"
         class="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4"
       >
+        {% with messages = get_flashed_messages() %} {% if messages %}
+        <div id="flash-message" class="p-3 mb-2 text-white bg-red-500 rounded">
+          {% for message in messages %} {{ message }} {% endfor %}
+        </div>
+        {% endif %} {% endwith %}
         <div class="mb-4">
           <h1 class="font-bold text-2xl mb-2 text-gray-700">
             Upload your files
@@ -116,6 +121,14 @@
     </div>
 
     <script>
+      window.onload = function () {
+        setTimeout(function () {
+          let flashMessage = document.getElementById("flash-message");
+          if (flashMessage) {
+            flashMessage.style.display = "none";
+          }
+        }, 5000);
+      };
       const dropArea = document.querySelector(".drag-drop-area");
       const dropAreaText = document.querySelector("#drop-area-text");
       const fileInput = document.querySelector("#file-input");
